@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A.R.C.A. — Terminal Interno</title>
+<style>
+:root{--bg:#07100e;--panel:#101b18;--panel2:#162420;--line:#35534a;--green:#a7d8b5;--muted:#769287;--red:#d66b6b;--amber:#d7bd78}
+*{box-sizing:border-box}body{margin:0;background:#050a09;color:#dce8df;font:14px ui-monospace,SFMono-Regular,Consolas,monospace;min-height:100vh}
+button,input{font:inherit}button{cursor:pointer;color:var(--green);background:#13221d;border:1px solid var(--line);padding:9px 12px}button:hover{background:#20372d;border-color:var(--green)}
+.boot{position:fixed;inset:0;background:#020504;z-index:10;display:flex;align-items:center;justify-content:center;padding:20px}.bootbox{max-width:620px;width:100%;border:1px solid var(--line);padding:28px;background:#08110e;box-shadow:0 0 45px #163d2c55}.glow{color:var(--green);text-shadow:0 0 9px #78c99a55}.boot p{color:var(--muted);line-height:1.7}.boot input{background:#050a08;border:1px solid var(--line);padding:11px;color:var(--green);width:100%;margin:8px 0 14px}
+.desktop{max-width:1200px;margin:auto;padding:18px}.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding:12px 4px 18px;margin-bottom:18px}.brand{font-size:20px;letter-spacing:3px}.status{color:var(--amber);font-size:11px}.layout{display:grid;grid-template-columns:230px 1fr;gap:16px}.sidebar,.main{border:1px solid var(--line);background:var(--panel)}.sidebar{padding:12px}.sidehead{color:var(--muted);font-size:11px;margin:8px 8px 12px}.nav{display:flex;width:100%;text-align:left;margin:4px 0;background:transparent;border-color:transparent;color:#c5d6ca}.nav.active{background:#20352c;border-color:#35594a}.notice{border:1px solid #604a30;background:#241d12;color:var(--amber);padding:10px;margin-top:20px;font-size:11px;line-height:1.5}.main{min-height:590px;padding:20px}.crumb{color:var(--muted);font-size:11px;margin-bottom:12px}.viewtitle{font-size:19px;margin:0 0 6px;color:var(--green)}.desc{color:var(--muted);line-height:1.6;margin:0 0 20px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.appcard{background:var(--panel2);border:1px solid var(--line);padding:15px;min-height:115px;cursor:pointer}.appcard:hover{border-color:var(--green);transform:translateY(-1px)}.appicon{font-size:25px;margin-bottom:12px}.apptitle{color:var(--green);margin-bottom:6px}.small{color:var(--muted);font-size:11px;line-height:1.5}.doc{border:1px solid var(--line);padding:18px;background:#0a1411;line-height:1.75;white-space:normal}.doc h3{color:var(--green);font-weight:normal;border-bottom:1px solid var(--line);padding-bottom:8px}.redacted{background:#dce8df;color:#dce8df;padding:0 8px;user-select:none}.filelist{display:grid;gap:8px}.file{padding:13px;border:1px solid var(--line);background:var(--panel2);display:flex;justify-content:space-between;gap:10px;align-items:center}.file strong{color:var(--green);font-weight:normal}.file button{flex-shrink:0}.mail{padding:13px;border-bottom:1px solid var(--line);cursor:pointer}.mail:hover{background:var(--panel2)}.mail.unread strong:after{content:" • NOVO";color:var(--amber);font-size:10px}.terminal{background:#020604;border:1px solid #254336;padding:14px;min-height:270px;color:var(--green);line-height:1.6;white-space:pre-wrap}.terminal input{background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--green);width:80%;outline:none;padding:6px}.footer{color:#49685b;font-size:10px;margin-top:18px;display:flex;justify-content:space-between;gap:10px}.hidden{display:none}.back{margin:0 0 16px}.warn{color:var(--red)}.lock{color:var(--amber)}@media(max-width:700px){.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}.sidehead,.notice{grid-column:1/-1}.topbar{align-items:flex-start;flex-direction:column}.main{padding:14px}.desktop{padding:10px}}
+
+.gate{position:fixed;inset:0;background:#020604dd;z-index:20;display:flex;align-items:center;justify-content:center;padding:18px}
+.gatebox{width:min(460px,100%);border:1px solid var(--line);background:#08110e;padding:22px;box-shadow:0 0 50px #163d2c66}
+.gatebox h2{font-size:16px;color:var(--green);font-weight:normal;letter-spacing:1px}
+.gatebox input{width:100%;background:#020604;border:1px solid var(--line);padding:11px;color:var(--green);margin:10px 0}
+.gatehint{font-size:11px;color:var(--muted);line-height:1.6;margin:10px 0}
+.gateerror{font-size:12px;color:var(--red);min-height:18px;margin-bottom:8px}
+
+</style>
+</head>
+<body>
+
+<div class="gate hidden" id="gate">
+ <div class="gatebox">
+  <div class="small">A.R.C.A. / AUTENTICAÇÃO DE DOCUMENTO</div>
+  <h2 id="gatetitle">ARQUIVO PROTEGIDO</h2>
+  <p class="gatehint" id="gatehint">Este documento exige uma senha de acesso.</p>
+  <label for="gatepass">SENHA DO ARQUIVO</label>
+  <input id="gatepass" type="password" placeholder="Digite a senha..." autocomplete="off" onkeydown="if(event.key==='Enter')submitGate()">
+  <div class="gateerror" id="gateerror"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="submitGate()">AUTENTICAR →</button><button onclick="closeGate()">CANCELAR</button></div>
+ </div>
+</div>
+
+<div class="boot" id="boot">
+ <div class="bootbox">
+  <div class="glow" style="font-size:24px;letter-spacing:4px">A.R.C.A.</div>
+  <p>AMBIENTE RESTRITO DE REGISTROS CLÍNICOS E ADMINISTRATIVOS<br>Terminal interno · Unidade principal</p>
+  <p>AVISO: atividade monitorada. Acesso não autorizado será registrado.</p>
+  <label for="user">IDENTIFICAÇÃO FUNCIONAL</label>
+  <input id="user" placeholder="ex.: Dr. Meireles / Paciente 047" autocomplete="off">
+  <button onclick="login()">INICIAR SESSÃO →</button>
+  <div class="small" style="margin-top:14px">Dica: experimente entrar como “Dr. Meireles”.</div>
+ </div>
+</div>
+<div class="desktop">
+ <header class="topbar"><div><div class="brand glow">A.R.C.A. <span style="font-size:11px;color:var(--muted)">/ INTRANET</span></div><div class="small">Arquivo de Registro Clínico e Anomalias</div></div><div><div class="status">● REDE INTERNA INSTÁVEL</div><div class="small" id="clock">UNIDADE 01 · --:--:--</div></div></header>
+ <div class="layout">
+  <aside class="sidebar">
+   <div class="sidehead">MENU DO SISTEMA</div>
+   <button class="nav active" data-page="home" onclick="go('home')">▦ &nbsp; Área de trabalho</button>
+   <button class="nav" data-page="records" onclick="go('records')">▤ &nbsp; Prontuários</button>
+   <button class="nav" data-page="mail" onclick="go('mail')">✉ &nbsp; Correio interno <span id="mailcount">[03]</span></button>
+   <button class="nav" data-page="archive" onclick="go('archive')">▣ &nbsp; Arquivo restrito</button>
+   <button class="nav" data-page="terminal" onclick="go('terminal')">⌘ &nbsp; Terminal</button>
+   <button class="nav" data-page="staff" onclick="go('staff')">♙ &nbsp; Diretório</button>
+   <div class="notice">LEMBRETE DE SEGURANÇA<br>Não acesse o subnível -2 sem autorização da administração.</div>
+  </aside>
+  <main class="main" id="main"></main>
+ </div>
+ <div class="footer"><span>ARCA-OS v4.7.1 · BUILD NÃO CERTIFICADA</span><span id="session">SESSÃO: DESCONHECIDA</span><span>USO INTERNO</span></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let username="DESCONHECIDO", unread=new Set([1,2,3]), secretUnlocked=false;
+const mail=[
+{from:"Administração",subject:"Atualização do protocolo noturno",date:"02:14",body:"A partir desta noite, as rondas da ala de isolamento devem ocorrer em duplas. Não respondam a chamados vindos de quartos oficialmente desocupados.\n\nEsta instrução substitui a circular enviada às 01:52. A circular anterior não existiu."},
+{from:"Enf. M. Duarte",subject:"Ocorrência — Quarto 07",date:"03:26",body:"Encontrei a paciente 047 conversando com o interfone desligado. Ela pediu que eu avisasse ao Dr. Meireles que “o homem terminou de contar”.\n\nNão sei o que isso significa. Por favor, não me coloquem novamente naquela ala."},
+{from:"REMETENTE NÃO IDENTIFICADO",subject:"VOCÊ ESTÁ NA SALA ERRADA",date:"03:33",body:"Se você consegue ler esta mensagem, o sistema ainda acredita que você trabalha aqui.\n\nNão abra o arquivo 0.\n\nNão procure o subnível -2.\n\nE se o terminal perguntar seu nome outra vez, não responda."}
+];
+const patientDoc=`<div class="doc"><div class="small">INSTITUTO A.R.C.A. · PSIQUIATRIA E ANOMALIAS COMPORTAMENTAIS</div><h3>PRONTUÁRIO MÉDICO — PACIENTE 047</h3><p><b>Nome:</b> Helena Vasconcelos<br><b>Idade:</b> 34 anos<br><b>Quarto:</b> Isolamento 07<br><b>Responsável:</b> Dr. Augusto Meireles</p><h3>HISTÓRICO</h3><p>Paciente encaminhada após episódios de comportamento desorganizado e relatos persistentes de pessoas escondidas em locais aparentemente vazios. Apresenta dificuldade em distinguir estímulos externos de experiências perceptivas próprias. Diagnóstico permanece inconclusivo.</p><h3>NOTA DE ENTREVISTA</h3><p>Quando questionada sobre as figuras que afirma ver, respondeu:</p><p class="lock">“Eu não tenho medo deles. Tenho medo de quem vocês deixaram entrar.”</p><h3>ADENDO — ACESSO RESTRITO</h3><p>Às 03h19, as câmeras do corredor 07 perderam sinal por 43 segundos. O arquivo de vídeo foi removido antes da chegada da equipe técnica.</p><p><b>Observação:</b> o registro de admissão indica que a paciente foi internada há seis meses. Um documento de 23 anos atrás contém a mesma fotografia.</p><p class="small">ASSINATURA DIGITAL INVÁLIDA · DOCUMENTO ALTERADO 4 VEZES</p></div>`;
+function login(){username=$('user').value.trim()||"VISITANTE";$('boot').style.display='none';$('session').textContent="SESSÃO: "+username.toUpperCase();go('home')}
+function go(page){document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===page));let m=$('main'); 
+if(page==='home'){m.innerHTML=`<div class="crumb">SISTEMA / INÍCIO</div><h1 class="viewtitle">Bom dia, ${esc(username)}.</h1><p class="desc">Bem-vindo ao ambiente interno da A.R.C.A. Alguns serviços estão temporariamente indisponíveis.</p><div class="cards">
+<div class="appcard" onclick="go('records')"><div class="appicon">▤</div><div class="apptitle">Prontuários clínicos</div><div class="small">Acessar registros de pacientes e observações médicas.</div></div>
+<div class="appcard" onclick="go('mail')"><div class="appicon">✉</div><div class="apptitle">Correio interno</div><div class="small">3 mensagens retidas na caixa de entrada.</div></div>
+<div class="appcard" onclick="go('archive')"><div class="appicon">▣</div><div class="apptitle">Arquivo restrito</div><div class="small">Documentos administrativos e arquivos incompletos.</div></div>
+<div class="appcard" onclick="go('terminal')"><div class="appicon">⌘</div><div class="apptitle">Terminal</div><div class="small">Acesso por comandos. Algumas respostas não são oficiais.</div></div>
+<div class="appcard" onclick="go('staff')"><div class="appicon">♙</div><div class="apptitle">Diretório de pessoal</div><div class="small">Funcionários, cargos e estado de atividade.</div></div>
+</div><p class="small" style="margin-top:24px">ÚLTIMO AVISO DO SISTEMA: <span class="warn">“Se ouvir seu nome no alto-falante, confirme primeiro se a sala está ocupada.”</span></p>`}
+if(page==='records'){m.innerHTML=`<div class="crumb">SISTEMA / REGISTROS CLÍNICOS</div><h1 class="viewtitle">Prontuários clínicos</h1><p class="desc">Selecione um arquivo disponível.</p><div class="filelist">
+<div class="file"><div><strong>047-A · Helena Vasconcelos</strong><div class="small">Isolamento 07 · Observação contínua</div></div><button onclick="requestFile('047')">ABRIR</button></div>
+<div class="file"><div><strong>012-C · Marcos Avelar</strong><div class="small">Alta registrada · Histórico incompleto</div></div><button onclick="requestFile('012')">ABRIR</button></div>
+<div class="file"><div><strong>031-B · [DADOS CORROMPIDOS]</strong><div class="small">Localização: não consta · Status desconhecido</div></div><button onclick="requestFile('031')">ABRIR</button></div>
+</div><div id="docarea" style="margin-top:16px"></div>`}
+if(page==='mail'){m.innerHTML=`<div class="crumb">SISTEMA / CORREIO INTERNO</div><h1 class="viewtitle">Caixa de entrada</h1><p class="desc">Mensagens recentes. Algumas podem ter sido recuperadas de caixas apagadas.</p><div class="filelist">${mail.map((x,i)=>`<div class="mail ${unread.has(i+1)?'unread':''}" onclick="readMail(${i})"><strong>${esc(x.subject)}</strong><div class="small">De: ${esc(x.from)} · ${x.date}</div></div>`).join('')}</div><div id="mailbody" style="margin-top:15px"></div>`}
+if(page==='archive'){m.innerHTML=`<div class="crumb">SISTEMA / ARQUIVO RESTRITO</div><h1 class="viewtitle">Arquivo restrito</h1><p class="desc">Acesso parcial concedido. Os itens bloqueados exigem credenciais de nível superior.</p><div class="filelist">
+<div class="file"><div><strong>PROTOCOLO_03-N.pdf</strong><div class="small">Rondas noturnas · Revisado ontem</div></div><button onclick="requestFile('protocol')">LER</button></div>
+<div class="file"><div><strong>PLANTA_UNIDADE_PRINCIPAL.dat</strong><div class="small">Mapa estrutural · Versão pública</div></div><button onclick="requestFile('map')">LER</button></div>
+<div class="file"><div><strong>ARQUIVO_0 [ENCRIPTADO]</strong><div class="small lock">NÍVEL 5 · ACESSO NEGADO</div></div><button onclick="requestFile('zero')">TENTAR</button></div>
+<div class="file"><div><strong>SUBNÍVEL_02</strong><div class="small lock">LOCAL NÃO RECONHECIDO PELA PLANTA</div></div><button onclick="requestFile('sublevel')">ABRIR</button></div>
+<div class="file"><div><strong>CAMERAS_CORREDOR_07.rec</strong><div class="small">Gravação de segurança · 03h17</div></div><button onclick="requestFile('camera')">REPRODUZIR</button></div>
+<div class="file"><div><strong>000-VER / PARTE I — A ORIGEM</strong><div class="small">Fundação · O incidente que mudou tudo</div></div><button onclick="requestFile('verissimo1')">DESBLOQUEAR</button></div>
+<div class="file"><div><strong>000-VER / PARTE II — A CONSTRUÇÃO</strong><div class="small">Prontuários · Setores · Pesquisa</div></div><button onclick="requestFile('verissimo2')">DESBLOQUEAR</button></div>
+<div class="file"><div><strong>000-VER / PARTE III — O PREÇO DA PROTEÇÃO</strong><div class="small">Sigilo · Contenção · Protocolos</div></div><button onclick="requestFile('verissimo3')">DESBLOQUEAR</button></div>
+<div class="file"><div><strong>000-VER / PARTE IV — O LEGADO</strong><div class="small">Últimos anos · Adendo atribuído ao fundador</div></div><button onclick="requestFile('verissimo4')">DESBLOQUEAR</button></div>
+</div><div id="archivearea" style="margin-top:16px"></div>`}
+if(page==='terminal'){m.innerHTML=`<div class="crumb">SISTEMA / TERMINAL INTERNO</div><h1 class="viewtitle">Terminal de manutenção</h1><p class="desc">Digite <b>help</b> para ver os comandos disponíveis.</p><div class="terminal" id="termout">ARCA-OS [versão 4.7.1]\nConexão local estabelecida.\nAguardando comando...\n</div><div style="margin-top:10px;display:flex;gap:8px"><span class="glow">ARCA&gt;</span><input id="cmd" placeholder="digite um comando..." onkeydown="if(event.key==='Enter')runCmd()"><button onclick="runCmd()">EXECUTAR</button></div>`}
+if(page==='staff'){m.innerHTML=`<div class="crumb">SISTEMA / DIRETÓRIO</div><h1 class="viewtitle">Diretório de pessoal</h1><p class="desc">Funcionários ativos e registros de afastamento.</p><div class="filelist">
+<div class="file"><div><strong>Dr. Augusto Meireles</strong><div class="small">Psiquiatria · Afastamento temporário</div></div><span class="warn">INATIVO</span></div>
+<div class="file"><div><strong>Enf. Marina Duarte</strong><div class="small">Ala de isolamento · Turno noturno</div></div><span class="lock">ATIVO</span></div>
+<div class="file"><div><strong>Diretor: [REDACTED]</strong><div class="small">Administração central · Registro de acesso não disponível</div></div><span class="warn">?</span></div>
+<div class="file"><div><strong>Funcionário 000</strong><div class="small">Cargo não especificado · Fotografia indisponível</div></div><span class="warn">SEM REGISTRO</span></div>
+</div>`}
+}
+
+const fileAccess = {
+ '047': {title:'PRONTUÁRIO 047-A', password:'luzesapagadas', hint:'Dica recuperada do registro noturno: Helena não dorme quando as luzes se apagam.', action:()=>{openPatient()}},
+ '012': {title:'PRONTUÁRIO 012-C', password:'amanha', hint:'Dica: a data de alta de Marcos está registrada como o dia que ainda não chegou.', action:()=>{showDoc('012')}},
+ '031': {title:'PRONTUÁRIO 031-B', password:'duasvezes', hint:'Dica: uma frase aparece no arquivo: “Não deixem que ele seja contado...”', action:()=>{showDoc('031')}},
+ 'protocol': {title:'PROTOCOLO_03-N.pdf', password:'dupla', hint:'Dica: a primeira regra exige que as rondas sejam realizadas em pares.', action:()=>{archiveDoc(1)}},
+ 'map': {title:'PLANTA_UNIDADE_PRINCIPAL.dat', password:'naoplanta', hint:'Dica: o subnível secreto não aparece na planta oficial.', action:()=>{archiveDoc(2)}},
+ 'zero': {title:'ARQUIVO_0', password:'zero', hint:'Dica: o nome do arquivo também é a resposta. Tente apenas se quiser deixar um registro no sistema.', action:()=>{archiveDoc(0)}},
+ 'sublevel': {title:'SUBNÍVEL_02', password:'contagem', hint:'Dica: a paciente fala de alguém que está contando até chegar ao fim.', action:()=>{archiveDoc(3)}},
+ 'camera': {title:'CAMERAS_CORREDOR_07.rec', password:'0317', hint:'Dica: o horário da ocorrência foi 03h17.', action:()=>{cameraDoc()}},
+ 'verissimo1': {title:'000-VER / PARTE I — A ORIGEM', password:'0413', hint:'Arquivo histórico do fundador. Credencial exigida: nível de acesso legado.', action:()=>{verissimoDoc(1)}},
+ 'verissimo2': {title:'000-VER / PARTE II — A CONSTRUÇÃO', password:'2527', hint:'Arquivo histórico do fundador. Credencial exigida: nível de acesso legado.', action:()=>{verissimoDoc(2)}},
+ 'verissimo3': {title:'000-VER / PARTE III — O PREÇO DA PROTEÇÃO', password:'1998', hint:'Arquivo histórico do fundador. Credencial exigida: nível de acesso legado.', action:()=>{verissimoDoc(3)}},
+ 'verissimo4': {title:'000-VER / PARTE IV — O LEGADO', password:'2020', hint:'Arquivo histórico do fundador. Credencial exigida: nível de acesso legado.', action:()=>{verissimoDoc(4)}}
+};
+let pendingFile=null;
+function requestFile(id){pendingFile=id;const f=fileAccess[id];$('gatetitle').textContent=f.title;$('gatehint').textContent=f.hint;$('gatepass').value='';$('gateerror').textContent='';$('gate').classList.remove('hidden');setTimeout(()=>$('gatepass').focus(),50)}
+function closeGate(){$('gate').classList.add('hidden');pendingFile=null}
+function submitGate(){if(!pendingFile)return;const f=fileAccess[pendingFile],value=$('gatepass').value.trim().toLowerCase();if(value===f.password.toLowerCase()){const action=f.action;closeGate();action()}else{$('gateerror').textContent='SENHA INCORRETA. TENTATIVA REGISTRADA.';$('gatepass').value='';if(pendingFile==='zero')$('gateerror').textContent='ACESSO NEGADO. O SISTEMA REGISTROU SUA TENTATIVA.'}}
+
+function verissimoDoc(part){
+ const docs={
+ 1:`<div class="doc"><div class="small">A.R.C.A. · ARQUIVO HISTÓRICO RESTRITO · DOCUMENTO 000-VER</div><h3>PARTE I — A ORIGEM</h3><p><b>FIGURA CENTRAL:</b> Sr. Veríssimo, fundador e antigo agente renomado da Ordem.</p><h3>O HOMEM ANTES DA INSTITUIÇÃO</h3><p>Antes da A.R.C.A., Veríssimo era conhecido entre os agentes da Ordem por retornar de operações que custavam a vida de outros. Conhecia o paranormal, mas também conhecia o destino de quem sobrevivia a ele: pessoas que perdiam a capacidade de distinguir o real, desenvolviam alterações inexplicáveis ou eram afastadas de tudo o que conheciam.</p><p>A Ordem sabia enfrentar o paranormal. Não sabia o que fazer com aqueles que sobreviviam a ele.</p><h3>O INCIDENTE QUE MUDOU TUDO</h3><p>Durante uma operação, Veríssimo encontrou sobreviventes de um fenômeno paranormal. Não eram cultistas nem haviam provocado o incidente. Eram pessoas comuns, marcadas por algo que não compreendiam. Os relatórios divergem sobre o destino do grupo; todos, porém, mencionam Veríssimo e seu pedido para assumir responsabilidade por eles.</p><p class="lock">“Passamos a vida impedindo que o desconhecido alcance as pessoas. Mas, quando ele finalmente as alcança, nós as tratamos como se a culpa fosse delas.”</p><h3>A PRIMEIRA DECISÃO</h3><p>Veríssimo reuniu médicos, pesquisadores, especialistas e agentes dispostos a acompanhar os sobreviventes. Seu princípio era simples: ninguém seria reduzido à própria condição paranormal. A A.R.C.A. nasceu para oferecer abrigo, investigação e acompanhamento a quem não encontrava lugar seguro fora dali.</p><p>O nome da instituição aparece apenas em registros posteriores. A ata original de aprovação da sigla está desaparecida.</p><p class="small">FIM DA PARTE I · PRÓXIMO REGISTRO: A TRANSFORMAÇÃO DO ABRIGO EM INSTITUIÇÃO.</p></div>`,
+ 2:`<div class="doc"><div class="small">A.R.C.A. · ARQUIVO HISTÓRICO RESTRITO · DOCUMENTO 000-VER</div><h3>PARTE II — A CONSTRUÇÃO</h3><h3>TRANSFORMAR ABRIGO EM INSTITUIÇÃO</h3><p>O crescimento da A.R.C.A. revelou que a boa vontade não bastava. Pacientes apresentavam necessidades incompatíveis, e um procedimento útil para uma pessoa podia agravar a condição de outra. Veríssimo organizou prontuários individuais, separou a avaliação clínica da avaliação de risco, criou setores especializados e estabeleceu protocolos para emergências.</p><p>Essas medidas permitiram reconhecer padrões, acompanhar crises e desenvolver tratamentos. Também fizeram com que os prontuários passassem a determinar circulação, classificações de risco influenciassem decisões clínicas e o isolamento se tornasse uma resposta cada vez mais comum.</p><h3>CONSTRUIR PARA O IMPREVISÍVEL</h3><p>O edifício foi reformado com salas de observação, laboratórios, iluminação independente e sistemas de segurança. Alguns projetos foram abandonados; outros aparecem em registros financeiros, mas não nas plantas oficiais. Há referências a elevadores inexistentes, escadas que terminam em paredes e setores cuja numeração não corresponde aos corredores.</p><p>Veríssimo ordenou que as irregularidades fossem investigadas e que os documentos originais fossem preservados, mesmo quando contradissessem as versões oficiais.</p><p class="lock">“Uma planta incorreta é perigosa. Uma planta incorreta que todos acreditam ser verdadeira é muito pior.”</p><h3>PESQUISAR PARA TRATAR</h3><p>A pesquisa da A.R.C.A. passou a investigar relações entre condições clínicas, alterações físicas e manifestações paranormais. O conhecimento acumulado ajudou pacientes, mas também atraiu profissionais interessados em estudar casos raros como oportunidades científicas.</p><p>Veríssimo tentou impor autorizações, revisões e limites. Ainda assim, a instituição precisava investigar para tratar, embora nem sempre compreendesse aquilo que estudava.</p><p class="small">FIM DA PARTE II · PRÓXIMO REGISTRO: O SIGILO E O CONTROLE.</p></div>`,
+ 3:`<div class="doc"><div class="small">A.R.C.A. · ARQUIVO HISTÓRICO RESTRITO · DOCUMENTO 000-VER</div><h3>PARTE III — O PREÇO DA PROTEÇÃO</h3><h3>PROTEGER A INSTITUIÇÃO</h3><p>Veríssimo determinou que informações sensíveis fossem divididas por níveis de acesso. Nomes foram substituídos por códigos, prontuários receberam restrições e relatórios de incidentes passaram a ser armazenados separadamente. A intenção era proteger os pacientes de curiosos, oportunistas e organizações que poderiam explorar suas condições.</p><p>Na prática, médicos desconheciam incidentes registrados por outras equipes, funcionários recebiam instruções sem conhecer sua origem e pacientes eram transferidos sem que seus novos responsáveis tivessem acesso ao histórico completo. O sigilo também dificultava compreender aquilo que deveria proteger.</p><h3>QUANDO PROTEGER SIGNIFICA CONTER</h3><p>Algumas manifestações colocavam pacientes e terceiros em risco. Veríssimo autorizou protocolos de contenção preventiva, restrições temporárias de circulação e avaliações específicas para os casos mais perigosos. Em sua concepção original, o isolamento deveria ser excepcional, justificado por evidências e revisto sempre que possível.</p><p>Com o tempo, as exceções se acumularam. Portas permaneceram trancadas por mais tempo, a liberdade passou a depender de classificações internas e a contenção tornou-se parte da rotina.</p><p class="lock">Veríssimo não havia criado uma prisão. Havia criado uma instituição que, por medo de falhar em sua missão, começava a adotar algumas das características de uma.</p><h3>NOTA ADMINISTRATIVA</h3><p>Os arquivos não esclarecem se o fundador percebeu todas as consequências dessas medidas ou se as considerava sacrifícios temporários. Há protocolos assinados por ele e outros atribuídos à sua direção cuja autenticidade permanece em análise.</p><p class="small">FIM DA PARTE III · PRÓXIMO REGISTRO: O DESTINO DO FUNDADOR.</p></div>`,
+ 4:`<div class="doc"><div class="small">A.R.C.A. · ARQUIVO HISTÓRICO RESTRITO · DOCUMENTO 000-VER</div><h3>PARTE IV — O LEGADO</h3><h3>OS ÚLTIMOS ANOS</h3><p>Os documentos referentes aos últimos anos de Veríssimo são fragmentados. Há atas de reuniões e ordens de reforma assinadas por ele, mas também períodos sem registros, seguidos por documentos que o tratam como se ainda supervisionasse pessoalmente a instituição.</p><p>Um relatório menciona um setor não identificado nas plantas oficiais. Outro registra uma ordem para suspender transferências em determinado corredor, sem preservar a justificativa. Há também uma proposta para revisar casos considerados sem possibilidade de recuperação, mas a solicitação nunca foi concluída.</p><p>Não existe consenso sobre sua saída. Alguns documentos indicam aposentadoria; outros, afastamento. A ata de sucessão assinada pelo próprio Veríssimo nunca foi localizada.</p><h3>O LEGADO</h3><p>Sem Veríssimo, a A.R.C.A. talvez jamais tivesse existido. Ele reuniu profissionais, criou procedimentos e ofereceu acompanhamento a pessoas que poderiam ter sido abandonadas. Contudo, o sigilo limitou a comunicação, os protocolos restringiram a liberdade e a pesquisa criou conflitos entre conhecimento e cuidado.</p><p>A instituição continuou funcionando, embora ninguém consiga afirmar exatamente onde termina o tratamento e começa a contenção.</p><h3>ADENDO ATRIBUÍDO AO FUNDADOR</h3><p class="lock">“Não construí a A.R.C.A. porque acreditava que poderíamos salvar todos. Construí porque vi o que acontecia com aqueles que ninguém tentava salvar.</p><p class="lock">Se um dia a A.R.C.A. deixar de enxergar pessoas em seus pacientes e passar a enxergar apenas condições a serem estudadas, então teremos fracassado.</p><p class="lock">Se esquecermos por que começamos, não teremos construído um abrigo. Teremos construído apenas mais um lugar do qual as pessoas precisam ser salvas.”</p><p><b>NOTA DO ARQUIVISTA:</b> O adendo foi encontrado dentro de uma pasta identificada como ARQUIVO_0, embora o índice oficial não registre material associado ao Sr. Veríssimo nessa pasta. A assinatura corresponde às demais atribuídas ao fundador. A data foi escrita com tinta incompatível com os documentos da época.</p><p class="warn">OBSERVAÇÃO FINAL: a autenticidade do documento não pôde ser confirmada.</p></div>`
+ };
+ $('archivearea').innerHTML=docs[part]||'<div class="doc">ARQUIVO NÃO ENCONTRADO.</div>';
+}
+
+function cameraDoc(){const el=$('archivearea');el.innerHTML=`<div class="doc"><h3>GRAVAÇÃO DE SEGURANÇA — CORREDOR 07</h3><p><b>Horário:</b> 03h17min00s–03h17min43s</p><p>O corredor aparece vazio durante os primeiros segundos. A imagem falha. Quando retorna, há uma pessoa diante da porta do quarto 07.</p><p>O rosto não pode ser identificado. A pessoa parece olhar diretamente para a câmera.</p><p class="lock">LEGENDA AUTOMÁTICA: “OBRIGADO POR ME DEIXAR ENTRAR.”</p><p class="small">NOTA TÉCNICA: a câmera está instalada do lado de dentro do corredor. Não há registro de abertura da porta.</p></div>`}
+
+function openPatient(){document.getElementById('docarea').innerHTML=patientDoc}
+function showDoc(n){let el=document.getElementById('docarea');if(n==='012')el.innerHTML=`<div class="doc"><h3>PRONTUÁRIO 012-C — MARCOS AVELAR</h3><p>Paciente admitido por episódios recorrentes de perda de memória. Alta autorizada por assinatura digital do próprio paciente.</p><p><b>Nota:</b> não há registro de que Marcos tenha aprendido a utilizar o sistema de assinatura digital.</p><p class="small">ARQUIVO ENCERRADO · DATA DE ALTA: AMANHÃ</p></div>`;else el.innerHTML=`<div class="doc"><h3>PRONTUÁRIO 031-B</h3><p>O arquivo não contém dados clínicos. Há apenas uma sequência de horários e uma anotação repetida:</p><p class="lock">“NÃO DEIXEM QUE ELE SEJA CONTADO DUAS VEZES.”</p><p class="small">ERRO DE LEITURA: O DOCUMENTO FOI MODIFICADO DURANTE A CONSULTA.</p></div>`}
+function readMail(i){unread.delete(i+1);$('mailcount').textContent=`[${String(unread.size).padStart(2,'0')}]`;let x=mail[i];$('mailbody').innerHTML=`<div class="doc"><div class="small">DE: ${esc(x.from)} · ${x.date}</div><h3>${esc(x.subject)}</h3><p>${esc(x.body).replace(/\n/g,'<br>')}</p></div>`;goNavKeep('mail')}
+function goNavKeep(p){document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===p))}
+function archiveDoc(n){let el=$('archivearea');if(n===1)el.innerHTML=`<div class="doc"><h3>PROTOCOLO 03-N · RONDAS NOTURNAS</h3><p>1. Realizar rondas em duplas após 02h00.<br>2. Não responder a vozes emitidas por alto-falantes desligados.<br>3. Se um funcionário for visto entrando duas vezes no mesmo corredor, comunicar a segurança.<br>4. Não registrar o item 3 no relatório oficial.</p></div>`;else if(n===2)el.innerHTML=`<div class="doc"><h3>PLANTA DA UNIDADE PRINCIPAL</h3><p>Subsolo -1: manutenção, lavanderia, arquivo morto.</p><p>Subsolo -2: <span class="redacted">████████████</span></p><p class="small">NOTA: O edifício não possui subsolo -2 segundo o cadastro municipal.</p>`;else if(n===0){el.innerHTML=`<div class="doc"><h3 class="warn">ACESSO NEGADO</h3><p>Credenciais insuficientes. Tentativa registrada.</p><p class="lock">Olá, ${esc(username)}. Estávamos esperando você.</p></div>`;secretUnlocked=true}else el.innerHTML=`<div class="doc"><h3 class="warn">LOCAL NÃO ENCONTRADO</h3><p>O mapa foi atualizado.</p><p>O corredor atrás de você não consta na planta.</p></div>`}
+function runCmd(){let input=$('cmd'),v=input.value.trim().toLowerCase(),out=$('termout');let response='';
+const cmds={
+'help':'COMANDOS: help, status, time, patients, protocol, whoami, map, 047, clear',
+'status':'REDE: instável\nCÂMERAS: 12/13 online\nALA 07: sinal intermitente às 03h17\nSUBNÍVEL -2: não encontrado',
+'time':'03:17:00\n03:17:00\n03:17:00\nO relógio não está atrasado.',
+'patients':'047-A HELENA VASCONCELOS — OBSERVAÇÃO\n012-C MARCOS AVELAR — ALTA REGISTRADA\n000-X [SEM REGISTRO DE ADMISSÃO]',
+'protocol':'PROTOCOLO NOTURNO:\nNunca responda quando ouvir seu nome vindo de uma sala vazia.',
+'whoami':'USUÁRIO: '+username.toUpperCase()+'\nNÍVEL DE ACESSO: 2\nÚLTIMO LOGIN: NUNCA\n',
+'map':'MAPA DA UNIDADE PRINCIPAL CARREGADO.\nAVISO: há 1 corredor que não deveria existir.',
+'047':'ARQUIVO 047-A LOCALIZADO.\nA paciente solicitou falar com você.\nA paciente não sabe seu nome.\nAinda.',
+'clear':'__CLEAR__'
+};
+if(v==='open 0'||v==='arquivo 0'){response='ACESSO NEGADO.\nACESSO CONCEDIDO.\nACESSO NEGADO.\nPor favor, não desligue o terminal.'}
+else response=cmds[v]||'Comando não reconhecido. O sistema registrou sua tentativa.';
+if(v==='clear'){out.textContent='ARCA-OS [versão 4.7.1]\\n';input.value='';return}
+out.textContent+='\\nARCA> '+input.value+'\\n'+response+'\\n';input.value='';out.scrollTop=out.scrollHeight}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function tick(){let d=new Date();$('clock').textContent='UNIDADE 01 · '+d.toLocaleTimeString('pt-BR');}
+tick();setInterval(tick,1000);go('home');
+</script>
+</body></html>
